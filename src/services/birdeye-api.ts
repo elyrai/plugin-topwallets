@@ -32,10 +32,13 @@ export class BirdeyeApi {
         return BirdeyeApi.instance;
     }
 
-    async getOHLCV(tokenAddress: string): Promise<BirdeyeOHLCV> {
+    async getOHLCV(
+        tokenAddress: string,
+        type: string = "1D"
+    ): Promise<BirdeyeOHLCV> {
         try {
             const response = await this.client.get<BirdeyeOHLCV>(
-                `/defi/ohlcv?address=${tokenAddress}&type=1D&time_from=0&time_to=10000000000`
+                `/defi/ohlcv?address=${tokenAddress}&type=${type}&time_from=0&time_to=10000000000`
             );
 
             if (

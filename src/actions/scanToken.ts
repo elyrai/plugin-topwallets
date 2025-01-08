@@ -169,8 +169,19 @@ export const scanTokenAction: Action = {
             const tokenData = response.data;
 
             const responseDex = await apiDex.getTokenInfo(address);
-            const responseOHCLV = await apiBirdeye.getOHLCV(address);
-            const priceAth = getAth(responseOHCLV.data.items);
+
+            // Check if the token was created less than 24h ago
+            let responseOhclv: any;
+            if (
+                new Date(responseDex.pairCreatedAt).getTime() >
+                Date.now() - 24 * 60 * 60 * 1000
+            ) {
+                responseOhclv = await apiBirdeye.getOHLCV(address, "1H");
+            } else {
+                responseOhclv = await apiBirdeye.getOHLCV(address, "1D");
+            }
+
+            const priceAth = getAth(responseOhclv.data.items);
 
             const topPercentHolders = await getTopPercentHolders(address);
 
