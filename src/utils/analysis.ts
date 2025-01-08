@@ -14,6 +14,37 @@ export function formatNumber(num: number | null): string {
     return num.toFixed(2);
 }
 
+export function getTimeAgo(timestamp: number): string {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    return `${days}d`;
+}
+
+export function formatPercentages(
+    percentages: number[],
+    nb: number = 3
+): string {
+    const top = percentages.slice(0, nb);
+
+    const totalPercents = percentages.reduce(
+        (sum, current) => sum + current,
+        0
+    );
+
+    const topFormatted = top.map((p) => `${p.toFixed(1)}%`).join(" - ");
+
+    const sumFormatted = `[top ${percentages.length} - ${totalPercents.toFixed(
+        0
+    )}%]`;
+
+    return `${topFormatted} ${sumFormatted}`;
+}
+
 export function analyzeMetrics(token: TokenResponse["data"]): string[] {
     const metrics: string[] = [];
 

@@ -82,7 +82,9 @@ export class TopWalletsAPI {
 
             if (!validTimeframes.includes(timeframe as TimeframeType)) {
                 throw new Error(
-                    `Invalid timeframe. Must be one of: ${validTimeframes.join(", ")}`
+                    `Invalid timeframe. Must be one of: ${validTimeframes.join(
+                        ", "
+                    )}`
                 );
             }
 

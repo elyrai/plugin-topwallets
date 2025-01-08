@@ -133,6 +133,128 @@ export interface TokenResponse {
     };
 }
 
+export interface DexScreenerPair {
+    chainId: string;
+    dexId: string;
+    url: string;
+    pairAddress: string;
+    baseToken: {
+        address: string;
+        name: string;
+        symbol: string;
+    };
+    quoteToken: {
+        address: string;
+        name: string;
+        symbol: string;
+    };
+    priceNative: string;
+    priceUsd: string;
+    txns: {
+        m5: { buys: number; sells: number };
+        h1: { buys: number; sells: number };
+        h6: { buys: number; sells: number };
+        h24: { buys: number; sells: number };
+    };
+    volume: {
+        h24: number;
+        h6: number;
+        h1: number;
+        m5: number;
+    };
+    priceChange: {
+        m5: number;
+        h1: number;
+        h6: number;
+        h24: number;
+    };
+    liquidity: {
+        usd: number;
+        base: number;
+        quote: number;
+    };
+    fdv: number;
+    marketCap: number;
+    pairCreatedAt: number;
+    info: {
+        imageUrl: string;
+        websites: { label: string; url: string }[];
+        socials: { type: string; url: string }[];
+    };
+    boosts: {
+        active: number;
+    };
+}
+
+export interface DexScreenerData {
+    schemaVersion: string;
+    pairs: DexScreenerPair[];
+}
+
+export interface OHCLVItem {
+    address: string;
+    c: number; // close
+    h: number; // high
+    l: number; // low
+    o: number; // open
+    type:
+        | "1m"
+        | "3m"
+        | "5m"
+        | "15m"
+        | "30m"
+        | "1H"
+        | "2H"
+        | "4H"
+        | "6H"
+        | "8H"
+        | "12H"
+        | "1D"
+        | "3D"
+        | "1W"
+        | "1M";
+    v: number; // volume
+    unixTime: number;
+}
+
+export interface BirdeyeOHLCV {
+    data: {
+        items: OHCLVItem[];
+    };
+    success: boolean;
+    message: string;
+}
+
+export interface BirdeyMarketData {
+    data: {
+        address: string;
+        liquidity: number;
+        price: number;
+        supply: number;
+        marketcap: number;
+        circulating_supply: number;
+        circulating_marketcap: number;
+    };
+    success: boolean;
+    message: string;
+}
+
+export interface HolderItem {
+    amount: number;
+    decimals: number;
+    mint: string;
+    owner: string;
+    token_account: string;
+    ui_amount: number;
+}
+export interface BirdeyHolders {
+    data: {
+        items: HolderItem[];
+    };
+    success: boolean;
+    message: string;
+}
+
 export const TrendingTokenSchema = z.object({
     timeframe: z.enum(validTimeframes),
     count: z.number().min(1).max(20),

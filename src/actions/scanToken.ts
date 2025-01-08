@@ -9,12 +9,16 @@ import {
 } from "@ai16z/eliza";
 import { isAxiosError } from "axios";
 import { TopWalletsAPI } from "../services/topwallets-api";
-import { Source, TokenResponse } from "../types";
+import { HolderItem, OHCLVItem, Source, TokenResponse } from "../types";
 import {
     analyzeMetrics,
     formatNumber,
+    formatPercentages,
     generateAIAnalysis,
+    getTimeAgo,
 } from "../utils/analysis";
+import { BirdeyeApi } from "../services/birdeye-api";
+import { DexScreenerApi } from "../services/dexscreener-api";
 
 function getMedalEmoji(index: number): string {
     switch (index) {
@@ -29,6 +33,36 @@ function getMedalEmoji(index: number): string {
     }
 }
 
+function getRiskScoreEmoji(riskScore: number): string {
+    if (riskScore >= 8) {
+        return "🟩";
+    } else if (riskScore >= 4) {
+        return "🟧";
+    } else {
+        return "🟥";
+    }
+}
+
+function getAth(data: OHCLVItem[]): {
+    high: number;
+    date: number;
+} {
+    const ath = data.reduce(
+        (acc, item) => {
+            if (item.h > acc.high) {
+                acc = { high: item.h, unixTime: item.unixTime };
+            }
+            return acc;
+        },
+        { high: 0, unixTime: 0 }
+    );
+
+    return {
+        high: ath.high,
+        date: ath.unixTime * 1000,
+    };
+}
+
 function formatWalletName(
     wallet: TokenResponse["data"]["topWallets"][0]
 ): string {
@@ -36,6 +70,39 @@ function formatWalletName(
         wallet.name ||
         wallet.address.slice(0, 4) + "..." + wallet.address.slice(-4);
     return wallet.type === "kols" ? `⭐ ${name}` : name;
+}
+
+async function getTopPercentHolders(tokenAddress: string): Promise<number[]> {
+    try {
+        const apiBirdeye = BirdeyeApi.getInstance();
+
+        const [topHolders, marketData] = await Promise.all([
+            apiBirdeye.getTopHolders(tokenAddress),
+            apiBirdeye.getMarketData(tokenAddress),
+        ]);
+
+        const totalSupply = marketData.data.circulating_supply;
+        const percentsHolder = topHolders.data.items.map(
+            (holder: HolderItem) => {
+                return parseFloat(
+                    ((holder.ui_amount / totalSupply) * 100).toFixed(2)
+                );
+            }
+        );
+        return percentsHolder;
+    } catch (error) {
+        console.error("Token scan error", {
+            error,
+            address: tokenAddress,
+            errorMessage: isAxiosError(error)
+                ? error.response?.data?.message || error.message
+                : error instanceof Error
+                ? error.message
+                : "Unknown error",
+            isAxiosError: isAxiosError(error),
+        });
+        return [];
+    }
 }
 
 export const scanTokenAction: Action = {
@@ -95,8 +162,17 @@ export const scanTokenAction: Action = {
 
         try {
             const api = TopWalletsAPI.getInstance();
+            const apiDex = DexScreenerApi.getInstance();
+            const apiBirdeye = BirdeyeApi.getInstance();
+
             const response = await api.getTokenInfo(address);
             const tokenData = response.data;
+
+            const responseDex = await apiDex.getTokenInfo(address);
+            const responseOHCLV = await apiBirdeye.getOHLCV(address);
+            const priceAth = getAth(responseOHCLV.data.items);
+
+            const topPercentHolders = await getTopPercentHolders(address);
 
             elizaLogger.debug("Token data received", {
                 address,
@@ -109,7 +185,11 @@ export const scanTokenAction: Action = {
             const metrics = analyzeMetrics(tokenData);
             const chartUrl = `https://dexscreener.com/solana/${address}`;
 
-            let analysisText = `${await generateAIAnalysis(tokenData, state, runtime)} Here are some details I found about it:\n\n`;
+            let analysisText = `${await generateAIAnalysis(
+                tokenData,
+                state,
+                runtime
+            )} Here are some details I found about it:\n\n`;
 
             analysisText += `📊 Token Analysis:\n`;
 
@@ -121,14 +201,32 @@ export const scanTokenAction: Action = {
                 analysisText += `\nFinancial Metrics:\n`;
             }
 
-            analysisText += `• Price: $${tokenData.price?.toFixed(6) || "N/A"}\n`;
-            analysisText += `• Market Cap: $${formatNumber(tokenData.marketCap)}\n`;
-            analysisText += `• Liquidity: $${formatNumber(tokenData.liquidity)}\n`;
-            analysisText += `• Risk Score: ${tokenData.riskScore}/10\n`;
+            analysisText += `💰 Price: $${
+                tokenData.price?.toFixed(6) || "N/A"
+            }  ⇨ ATH: $${priceAth.high.toFixed(6)} [${getTimeAgo(
+                priceAth.date
+            )}]\n`;
+
+            analysisText += `🪙 Market Cap: $${formatNumber(
+                tokenData.marketCap
+            )}\n`;
+            analysisText += `💎 FDV: $${formatNumber(responseDex.fdv)}\n`;
+
+            analysisText += `${getRiskScoreEmoji(
+                tokenData.riskScore
+            )} Risk Score: ${tokenData.riskScore}/10\n`;
+
+            analysisText += `💦 Liq: $${formatNumber(tokenData.liquidity)}\n`;
+            analysisText += `📊 Vol: $${formatNumber(
+                responseDex.volume.h24
+            )} 🕰️ Age: ${getTimeAgo(responseDex.pairCreatedAt)}\n`;
+
             if (source !== "telegram") {
                 const priceChange24h = tokenData.priceChange["24h"];
                 const changeIcon = priceChange24h >= 0 ? "📈" : "📉";
-                analysisText += `• 24h Change: ${changeIcon} ${priceChange24h?.toFixed(2) || "0"}%\n`;
+                analysisText += `• 24h Change: ${changeIcon} ${
+                    priceChange24h?.toFixed(2) || "0"
+                }%\n`;
             }
 
             if (tokenData.isRugged) {
@@ -136,7 +234,9 @@ export const scanTokenAction: Action = {
             }
 
             if (source === "telegram" && metrics.length > 0) {
-                analysisText += `\nKey Observations:\n${metrics.map((m) => `• ${m}`).join("\n")}\n`;
+                analysisText += `\nKey Observations:\n${metrics
+                    .map((m) => `• ${m}`)
+                    .join("\n")}\n`;
                 if (tokenData.social?.telegram || tokenData.social?.twitter) {
                     analysisText += `\nSocial Links:\n`;
                     if (tokenData.social.telegram) {
@@ -169,7 +269,9 @@ export const scanTokenAction: Action = {
                                     wallet.historic30d.percentageChange;
                                 const changeIcon = change >= 0 ? "📈" : "📉";
                                 analysisText += `   • 30d PnL: ${pnl}\n`;
-                                analysisText += `   • 30d Change: ${changeIcon} ${change.toFixed(1)}%\n`;
+                                analysisText += `   • 30d Change: ${changeIcon} ${change.toFixed(
+                                    1
+                                )}%\n`;
                             }
                             analysisText += "\n";
                         });
@@ -177,12 +279,17 @@ export const scanTokenAction: Action = {
                     const topWallet = tokenData.topWallets[0];
                     const name = formatWalletName(topWallet);
 
-                    analysisText += `• Top Wallet: ${name} (${topWallet.winrate}% WR)`;
+                    analysisText += `👥 Top Holders: ${formatPercentages(
+                        topPercentHolders
+                    )}\n`;
+
+                    analysisText += `💹 Top Wallet: ${name} (${topWallet.winrate}% WR)`;
                     if (topWallet.historic30d) {
                         const change = topWallet.historic30d.percentageChange;
                         const changeIcon = change >= 0 ? "📈" : "📉";
-                        analysisText += ` ${changeIcon} ${change.toFixed(1)}%\n`;
+                        analysisText += ` ${changeIcon} ${change.toFixed(1)}%`;
                     }
+                    analysisText += "\n";
                 }
             }
 
@@ -201,13 +308,15 @@ export const scanTokenAction: Action = {
                 errorMessage: isAxiosError(error)
                     ? error.response?.data?.message || error.message
                     : error instanceof Error
-                      ? error.message
-                      : "Unknown error",
+                    ? error.message
+                    : "Unknown error",
                 isAxiosError: isAxiosError(error),
             });
 
             const errorMessage = isAxiosError(error)
-                ? `Failed to scan token: ${error.response?.data?.message || error.message}`
+                ? `Failed to scan token: ${
+                      error.response?.data?.message || error.message
+                  }`
                 : "An unexpected error occurred while scanning the token.";
 
             console.log(error);
