@@ -224,13 +224,19 @@ export const scanTokenAction: Action = {
             if (source !== "telegram") {
                 const priceChange24h = tokenData.priceChange["24h"];
                 const changeIcon = priceChange24h >= 0 ? "📈" : "📉";
-                analysisText += `• 24h Change: ${changeIcon} ${
+                analysisText += `📈 24h Change: ${changeIcon} ${
                     priceChange24h?.toFixed(2) || "0"
                 }%\n`;
             }
 
             if (tokenData.isRugged) {
                 analysisText += `• 🚨 RUG PULL WARNING: This token has been flagged as potentially rugged!\n`;
+            }
+
+            if (source !== "telegram" && topPercentHolders.length > 3) {
+                analysisText += `👥 Top Holders: ${formatPercentages(
+                    topPercentHolders
+                )}\n`;
             }
 
             if (source === "telegram" && metrics.length > 0) {
@@ -278,10 +284,6 @@ export const scanTokenAction: Action = {
                 } else {
                     const topWallet = tokenData.topWallets[0];
                     const name = formatWalletName(topWallet);
-
-                    analysisText += `👥 Top Holders: ${formatPercentages(
-                        topPercentHolders
-                    )}\n`;
 
                     analysisText += `💹 Top Wallet: ${name} (${topWallet.winrate}% WR)`;
                     if (topWallet.historic30d) {
