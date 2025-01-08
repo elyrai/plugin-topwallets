@@ -213,8 +213,8 @@ export const scanTokenAction: Action = {
             }
 
             analysisText += `💰 Price: $${
-                tokenData.price?.toFixed(6) || "N/A"
-            }  ⇨ ATH: $${priceAth.high.toFixed(6)} [${getTimeAgo(
+                tokenData.price?.toFixed(2) || "N/A"
+            }  ⇨ ATH: $${priceAth.high.toFixed(2)} [${getTimeAgo(
                 priceAth.date
             )}]\n`;
 
