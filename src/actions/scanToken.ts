@@ -196,13 +196,7 @@ export const scanTokenAction: Action = {
             const metrics = analyzeMetrics(tokenData);
             const chartUrl = `https://dexscreener.com/solana/${address}`;
 
-            let analysisText = `${await generateAIAnalysis(
-                tokenData,
-                state,
-                runtime
-            )} Here are some details I found about it:\n\n`;
-
-            analysisText += `📊 Token Analysis:\n`;
+            let analysisText = `📊 Token Analysis:\n`;
 
             if (source === "telegram" && tokenData.description) {
                 analysisText += `Token Information:\n`;
@@ -213,14 +207,12 @@ export const scanTokenAction: Action = {
             }
 
             analysisText += `💰 Price: $${
-                tokenData.price?.toFixed(2) || "N/A"
-            }  ⇨ ATH: $${priceAth.high.toFixed(2)} [${getTimeAgo(
+                tokenData.price?.toFixed(4) || "N/A"
+            }  ⇨ ATH: $${priceAth.high.toFixed(4)} [${getTimeAgo(
                 priceAth.date
             )}]\n`;
 
-            analysisText += `🪙 Market Cap: $${formatNumber(
-                tokenData.marketCap
-            )}\n`;
+            analysisText += `🪙 MC: $${formatNumber(tokenData.marketCap)}\n`;
             analysisText += `💎 FDV: $${formatNumber(responseDex.fdv)}\n`;
 
             analysisText += `${getRiskScoreEmoji(
@@ -305,6 +297,12 @@ export const scanTokenAction: Action = {
                     analysisText += "\n";
                 }
             }
+
+            analysisText += `\n${await generateAIAnalysis(
+                tokenData,
+                state,
+                runtime
+            )}\n`;
 
             analysisText += `\n🔍 View more top wallets: https://www.topwallets.ai/solana/token/${address}\n`;
             analysisText += `\n🔍 View detailed chart: ${chartUrl}`;
