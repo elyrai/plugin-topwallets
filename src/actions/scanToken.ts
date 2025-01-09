@@ -298,7 +298,7 @@ export const scanTokenAction: Action = {
                 }
             }
 
-            analysisText += `\n${await generateAIAnalysis(
+            analysisText += `\n\n${await generateAIAnalysis(
                 tokenData,
                 state,
                 runtime
