@@ -97,8 +97,8 @@ async function getTopPercentHolders(tokenAddress: string): Promise<number[]> {
             errorMessage: isAxiosError(error)
                 ? error.response?.data?.message || error.message
                 : error instanceof Error
-                ? error.message
-                : "Unknown error",
+                  ? error.message
+                  : "Unknown error",
             isAxiosError: isAxiosError(error),
         });
         return [];
@@ -207,8 +207,8 @@ export const scanTokenAction: Action = {
             }
 
             analysisText += `💰 Price: $${
-                tokenData.price?.toFixed(4) || "N/A"
-            }  ⇨ ATH: $${priceAth.high.toFixed(4)} [${getTimeAgo(
+                tokenData.price?.toFixed(6) || "N/A"
+            }  ⇨ ATH: $${priceAth.high.toFixed(6)} [${getTimeAgo(
                 priceAth.date
             )}]\n`;
 
@@ -298,6 +298,8 @@ export const scanTokenAction: Action = {
                 }
             }
 
+            analysisText += "\nAI ANALYSIS\n";
+
             analysisText += `\n\n${await generateAIAnalysis(
                 tokenData,
                 state,
@@ -319,8 +321,8 @@ export const scanTokenAction: Action = {
                 errorMessage: isAxiosError(error)
                     ? error.response?.data?.message || error.message
                     : error instanceof Error
-                    ? error.message
-                    : "Unknown error",
+                      ? error.message
+                      : "Unknown error",
                 isAxiosError: isAxiosError(error),
             });
 
