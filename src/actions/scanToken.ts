@@ -208,7 +208,7 @@ export const scanTokenAction: Action = {
 
             analysisText += `💰 Price: $${
                 tokenData.price?.toFixed(6) || "N/A"
-            }  ⇨ ATH: $${priceAth.high.toFixed(6)} [${getTimeAgo(
+            } ⇨ ATH: $${priceAth.high.toFixed(6)} [${getTimeAgo(
                 priceAth.date
             )}]\n`;
 
@@ -217,7 +217,7 @@ export const scanTokenAction: Action = {
 
             analysisText += `${getRiskScoreEmoji(
                 tokenData.riskScore
-            )} Risk Score: ${tokenData.riskScore}/10\n`;
+            )} Risk: ${tokenData.riskScore}/10\n`;
 
             analysisText += `💦 Liq: $${formatNumber(tokenData.liquidity)}\n`;
             analysisText += `📊 Vol: $${formatNumber(
