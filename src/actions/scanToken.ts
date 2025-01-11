@@ -6,8 +6,10 @@ import {
     IAgentRuntime,
     Memory,
     State,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { isAxiosError } from "axios";
+import { BirdeyeApi } from "../services/birdeye-api";
+import { DexScreenerApi } from "../services/dexscreener-api";
 import { TopWalletsAPI } from "../services/topwallets-api";
 import { HolderItem, OHCLVItem, Source, TokenResponse } from "../types";
 import {
@@ -17,8 +19,6 @@ import {
     generateAIAnalysis,
     getTimeAgo,
 } from "../utils/analysis";
-import { BirdeyeApi } from "../services/birdeye-api";
-import { DexScreenerApi } from "../services/dexscreener-api";
 
 function getMedalEmoji(index: number): string {
     switch (index) {

@@ -1,8 +1,8 @@
-import { Plugin } from "@ai16z/eliza";
+import { Plugin } from "@elizaos/core";
 
+import { scanTokenAction } from "./actions/scanToken.ts";
 import { scanWalletAction } from "./actions/scanWallet.ts";
 import { trendingTokensProvider } from "./providers/trendingTokens.ts";
-import { scanTokenAction } from "./actions/scanToken.ts";
 
 export * as actions from "./actions";
 export * as providers from "./providers";
