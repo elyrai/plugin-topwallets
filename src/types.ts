@@ -285,3 +285,16 @@ export const isTokenInfo = (object: unknown): object is TokenInfo => {
     console.error("Invalid token info:", object);
     return false;
 };
+
+export interface TopKolsResponse {
+    success: boolean;
+    message: string;
+    data: WalletTradingData[];
+}
+
+export interface WalletTradingData {
+    all: WalletData;
+    "30d": WalletData;
+    "7d": WalletData;
+    "1d": WalletData;
+}

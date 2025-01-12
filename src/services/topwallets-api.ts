@@ -4,6 +4,7 @@ import {
     BotScanWalletResponse,
     TimeframeType,
     TokenResponse,
+    TopKolsResponse,
     TrendingTokenParams,
     TrendingTokenResponse,
 } from "../types";
@@ -122,6 +123,47 @@ export class TopWalletsAPI {
             return response.data;
         } catch (error) {
             elizaLogger.error("Token info error", { error });
+            throw error;
+        }
+    }
+
+    async getTopKols(limit: number = 100): Promise<TopKolsResponse> {
+        try {
+            const response = await this.client.get<TopKolsResponse>(
+                `/api/bot/solana/top-kols?limit=${limit}`
+            );
+
+            if (!response.data.success) {
+                elizaLogger.warn("Top KOLs fetch failed", {
+                    error: response.data.message,
+                });
+                throw new Error(response.data.message);
+            }
+
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Top KOLs error", { error });
+            throw error;
+        }
+    }
+
+    async getTopKolsPicture(): Promise<Buffer> {
+        try {
+            const response = await this.client.get(
+                "/api/bot/solana/top-kols/images?period=1d",
+                {
+                    responseType: "arraybuffer",
+                }
+            );
+
+            if (!response.data) {
+                elizaLogger.warn("Top KOLs image fetch failed");
+                throw new Error("Failed to fetch Top KOLs image");
+            }
+
+            return Buffer.from(response.data);
+        } catch (error) {
+            elizaLogger.error("Top KOLs image error", { error });
             throw error;
         }
     }

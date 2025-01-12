@@ -15,3 +15,5 @@ export const topwalletsPlugin: Plugin = {
     evaluators: [],
     providers: [trendingTokensProvider],
 };
+
+export { TopWalletsAPI } from "./services/topwallets-api";

@@ -1,5 +1,5 @@
 {
-    "name": "@ai16z/plugin-topwallets",
+    "name": "@elizaos/plugin-topwallets",
     "version": "0.1.0",
     "main": "dist/index.js",
     "type": "module",
