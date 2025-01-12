@@ -147,10 +147,10 @@ export class TopWalletsAPI {
         }
     }
 
-    async getTopKolsPicture(): Promise<Buffer> {
+    async getTopKolsPicture(period: string = "1d"): Promise<Buffer> {
         try {
             const response = await this.client.get(
-                "/api/bot/solana/top-kols/images?period=1d",
+                `/api/bot/solana/top-kols/images?period=${period}`,
                 {
                     responseType: "arraybuffer",
                 }
