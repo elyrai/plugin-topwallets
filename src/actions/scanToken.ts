@@ -9,7 +9,6 @@ import {
 } from "@elizaos/core";
 import { isAxiosError } from "axios";
 import { BirdeyeApi } from "../services/birdeye-api";
-import { DexScreenerApi } from "../services/dexscreener-api";
 import { TopWalletsAPI } from "../services/topwallets-api";
 import { HolderItem, OHCLVItem, Source, TokenResponse } from "../types";
 import {
@@ -162,19 +161,17 @@ export const scanTokenAction: Action = {
 
         try {
             const api = TopWalletsAPI.getInstance();
-            const apiDex = DexScreenerApi.getInstance();
             const apiBirdeye = BirdeyeApi.getInstance();
 
             const response = await api.getTokenInfo(address);
             const tokenData = response.data;
 
-            const responseDex = await apiDex.getTokenInfo(address);
-
             // Check if the token was created less than 24h ago
             let responseOhclv: any;
             if (
-                new Date(responseDex.pairCreatedAt).getTime() >
-                Date.now() - 24 * 60 * 60 * 1000
+                tokenData.pairCreatedAt &&
+                new Date(tokenData.pairCreatedAt * 1000).getTime() >
+                    Date.now() - 24 * 60 * 60 * 1000
             ) {
                 responseOhclv = await apiBirdeye.getOHLCV(address, "1H");
             } else {
@@ -213,7 +210,7 @@ export const scanTokenAction: Action = {
             )}]\n`;
 
             analysisText += `🪙 MC: $${formatNumber(tokenData.marketCap)}\n`;
-            analysisText += `💎 FDV: $${formatNumber(responseDex.fdv)}\n`;
+            analysisText += `💎 FDV: $${formatNumber(tokenData.fdv)}\n`;
 
             analysisText += `${getRiskScoreEmoji(
                 tokenData.riskScore
@@ -221,8 +218,8 @@ export const scanTokenAction: Action = {
 
             analysisText += `💦 Liq: $${formatNumber(tokenData.liquidity)}\n`;
             analysisText += `📊 Vol: $${formatNumber(
-                responseDex.volume.h24
-            )} 🕰️ Age: ${getTimeAgo(responseDex.pairCreatedAt)}\n`;
+                tokenData.volume.h24
+            )} 🕰️ Age: ${getTimeAgo(tokenData.pairCreatedAt * 1000)}\n`;
 
             if (source !== "telegram") {
                 const priceChange24h = tokenData.priceChange["24h"];
