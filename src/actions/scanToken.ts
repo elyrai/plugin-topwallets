@@ -32,10 +32,10 @@ function getMedalEmoji(index: number): string {
     }
 }
 
-function getRiskScoreEmoji(riskScore: number): string {
-    if (riskScore >= 8) {
+function getSecurityScoreEmoji(securityScore: number): string {
+    if (securityScore >= 8) {
         return "🟩";
-    } else if (riskScore >= 4) {
+    } else if (securityScore >= 4) {
         return "🟧";
     } else {
         return "🟥";
@@ -212,9 +212,10 @@ export const scanTokenAction: Action = {
             analysisText += `🪙 MC: $${formatNumber(tokenData.marketCap)}\n`;
             analysisText += `💎 FDV: $${formatNumber(tokenData.fdv)}\n`;
 
-            analysisText += `${getRiskScoreEmoji(
-                tokenData.riskScore
-            )} Risk: ${tokenData.riskScore}/10\n`;
+            const securityScore = 10 - tokenData.riskScore;
+            analysisText += `${getSecurityScoreEmoji(
+                securityScore
+            )} Security score: ${securityScore.toFixed(1)}/10\n`;
 
             analysisText += `💦 Liq: $${formatNumber(tokenData.liquidity)}\n`;
             analysisText += `📊 Vol: $${formatNumber(
