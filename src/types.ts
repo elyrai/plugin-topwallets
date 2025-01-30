@@ -30,6 +30,7 @@ export interface WalletData {
     averageHoldingTime: string;
     realizedPnl: string;
     unrealizedPnl: string;
+    combinedPnl: string;
     realizedRoi: string;
     unrealizedRoi: string;
     combinedRoi: string;
